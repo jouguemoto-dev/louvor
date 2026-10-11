@@ -8,10 +8,12 @@ import {
   Trash2, 
   SlidersHorizontal, 
   Flame, 
-  Sparkles,
-  Music,
-  Clock,
-  ArrowUpDown
+  Sparkles, 
+  Music, 
+  Clock, 
+  ArrowUpDown,
+  Link,
+  Loader2
 } from 'lucide-react';
 
 interface RepertorioViewProps {
@@ -21,6 +23,7 @@ interface RepertorioViewProps {
   onDeleteSong: (id: string) => void;
   onToggleSetlist: (id: string) => void;
   onOpenNewSong: () => void;
+  onSaveImportedSong?: (songData: Omit<Song, 'id'>) => void;
 }
 
 const CATEGORIES: Category[] = [
@@ -40,12 +43,71 @@ export const RepertorioView: React.FC<RepertorioViewProps> = ({
   onEditSong,
   onDeleteSong,
   onToggleSetlist,
-  onOpenNewSong
+  onOpenNewSong,
+  onSaveImportedSong,
 }) => {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
   const [selectedKey, setSelectedKey] = useState<string>('Todos');
   const [sortBy, setSortBy] = useState<'title' | 'bpm' | 'artist'>('title');
+
+  // Quick Cifra Club URL import
+  const [quickLink, setQuickLink] = useState('');
+  const [isQuickImporting, setIsQuickImporting] = useState(false);
+  const [quickFeedback, setQuickFeedback] = useState<{ text: string; isError?: boolean } | null>(null);
+
+  const handleQuickImport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickLink.trim()) return;
+
+    if (!quickLink.includes('cifraclub.com.br')) {
+      setQuickFeedback({ text: 'Insira um link do Cifra Club (ex: https://www.cifraclub.com.br/artista/musica/)', isError: true });
+      setTimeout(() => setQuickFeedback(null), 4000);
+      return;
+    }
+
+    setIsQuickImporting(true);
+    setQuickFeedback({ text: 'Buscando cifra no Cifra Club...' });
+
+    try {
+      const res = await fetch('/api/import-cifraclub', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: quickLink.trim() })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Não foi possível importar.');
+      }
+
+      const songData = data.data;
+      if (onSaveImportedSong) {
+        onSaveImportedSong({
+          title: songData.title,
+          artist: songData.artist,
+          key: songData.key,
+          bpm: songData.bpm || 120,
+          timeSig: songData.timeSig || '4/4',
+          category: songData.category || 'Adoração',
+          chords: songData.chords,
+          notes: songData.notes || '',
+          link: songData.link,
+          capo: songData.capo || 0,
+          inSetlist: false
+        });
+      }
+
+      setQuickFeedback({ text: `✅ "${songData.title}" cadastrada com sucesso!` });
+      setQuickLink('');
+      setTimeout(() => setQuickFeedback(null), 4000);
+    } catch (err: any) {
+      setQuickFeedback({ text: err.message || 'Erro ao importar cifra do link.', isError: true });
+      setTimeout(() => setQuickFeedback(null), 4000);
+    } finally {
+      setIsQuickImporting(false);
+    }
+  };
 
   // Unique keys available in the database
   const availableKeys = useMemo(() => {
@@ -98,6 +160,46 @@ export const RepertorioView: React.FC<RepertorioViewProps> = ({
           <span>Cadastrar Cifra</span>
         </button>
       </div>
+
+      {/* Quick Cifra Club Direct Importer Bar */}
+      <form onSubmit={handleQuickImport} className="bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 rounded-2xl p-3 sm:p-4 shadow-md">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <div className="flex items-center gap-2 flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs">
+            <Link className="w-4 h-4 text-amber-400 shrink-0" />
+            <input
+              type="url"
+              value={quickLink}
+              onChange={(e) => setQuickLink(e.target.value)}
+              placeholder="Cadastrar colando o link do Cifra Club (ex: https://www.cifraclub.com.br/isaias-saad/bondade-de-deus/)"
+              className="w-full bg-transparent text-slate-100 placeholder-slate-500 focus:outline-none font-mono text-xs"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isQuickImporting || !quickLink.trim()}
+            className="flex items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-400 active:scale-95 disabled:opacity-50 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-md whitespace-nowrap"
+          >
+            {isQuickImporting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Importando...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                <span>Importar Cifra do Link</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {quickFeedback && (
+          <p className={`text-xs mt-2 font-medium ${quickFeedback.isError ? 'text-red-400' : 'text-amber-400'}`}>
+            {quickFeedback.text}
+          </p>
+        )}
+      </form>
 
       {/* Search & Filter Toolbar */}
       <div className="space-y-3">

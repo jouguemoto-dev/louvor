@@ -14,20 +14,19 @@ import {
   Play, 
   Pause, 
   Clock, 
-  Sliders, 
   Edit3, 
   Trash2, 
   Share2, 
   Printer, 
   Columns, 
-  Type, 
   ChevronLeft, 
   ChevronRight,
-  Sun,
   Moon,
   Info,
-  CheckCircle2,
-  Guitar
+  Guitar,
+  X,
+  Sun,
+  Tv
 } from 'lucide-react';
 
 interface SongDetailViewProps {
@@ -37,7 +36,6 @@ interface SongDetailViewProps {
   onDelete: (id: string) => void;
   onOpenMetronome: (bpm: number, timeSig: string) => void;
   onInspectChord: (chord: string) => void;
-  // Setlist sequential navigation
   setlistSongs?: Song[];
   onNavigateSong?: (id: string) => void;
 }
@@ -57,52 +55,90 @@ export const SongDetailView: React.FC<SongDetailViewProps> = ({
   const [fontSize, setFontSize] = useState<number>(18);
   const [isTwoColumns, setIsTwoColumns] = useState<boolean>(false);
   const [isStageBlackout, setIsStageBlackout] = useState<boolean>(false);
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [isStageFullscreen, setIsStageFullscreen] = useState<boolean>(false);
 
   // Auto Scroll state
   const [isScrolling, setIsScrolling] = useState<boolean>(false);
   const [scrollSpeed, setScrollSpeed] = useState<number>(3); // 1 (slow) to 10 (fast)
   const [countdown, setCountdown] = useState<number | null>(null);
   const scrollIntervalRef = useRef<number | null>(null);
+  const stageScrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const wakeLockRef = useRef<any>(null);
 
   // Reset transposition when song changes
   useEffect(() => {
     setSemitones(0);
     setPreferFlat(Boolean(song.key && song.key.includes('b')));
     stopAutoScroll();
+    if (stageScrollContainerRef.current) {
+      stageScrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }, [song.id, song.key]);
 
-  // Handle Fullscreen events
-  useEffect(() => {
-    const handleFsChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFsChange);
-    return () => document.removeEventListener('fullscreenchange', handleFsChange);
-  }, []);
+  // Request Screen Wake Lock so screen doesn't turn off on stage
+  const requestWakeLock = async () => {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+      }
+    } catch {
+      // Ignored if permissions not granted
+    }
+  };
 
-  // Keyboard navigation for setlist
+  const releaseWakeLock = () => {
+    if (wakeLockRef.current) {
+      wakeLockRef.current.release().catch(() => {});
+      wakeLockRef.current = null;
+    }
+  };
+
+  // Enter Full Screen Stage Mode
+  const enterStageFullscreen = () => {
+    setIsStageFullscreen(true);
+    requestWakeLock();
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {
+        // Fallback to overlay fullscreen
+      });
+    }
+  };
+
+  // Exit Full Screen Stage Mode
+  const exitStageFullscreen = () => {
+    setIsStageFullscreen(false);
+    releaseWakeLock();
+    stopAutoScroll();
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
+  // Keyboard navigation & Foot Pedal page turners (Left/Right arrows, Space, PageUp/PageDown)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-      if (e.key === 'ArrowRight' && nextSong && onNavigateSong) {
+      if ((e.key === 'ArrowRight' || e.key === 'PageDown') && nextSong && onNavigateSong) {
         onNavigateSong(nextSong.id);
-      } else if (e.key === 'ArrowLeft' && prevSong && onNavigateSong) {
+      } else if ((e.key === 'ArrowLeft' || e.key === 'PageUp') && prevSong && onNavigateSong) {
         onNavigateSong(prevSong.id);
       } else if (e.code === 'Space') {
         e.preventDefault();
         toggleAutoScroll();
+      } else if (e.key === 'Escape' && isStageFullscreen) {
+        exitStageFullscreen();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [song.id, setlistSongs]);
+  }, [song.id, setlistSongs, isStageFullscreen]);
 
-  // Cleanup auto-scroll on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
+      releaseWakeLock();
     };
   }, []);
 
@@ -127,10 +163,13 @@ export const SongDetailView: React.FC<SongDetailViewProps> = ({
 
   const launchScrollLoop = () => {
     if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
-    // Interval based on speed: higher speed = shorter interval
     const intervalMs = Math.max(16, 120 - scrollSpeed * 10);
     scrollIntervalRef.current = window.setInterval(() => {
-      window.scrollBy({ top: 1, behavior: 'smooth' });
+      if (isStageFullscreen && stageScrollContainerRef.current) {
+        stageScrollContainerRef.current.scrollBy({ top: 1, behavior: 'smooth' });
+      } else {
+        window.scrollBy({ top: 1, behavior: 'smooth' });
+      }
     }, intervalMs);
   };
 
@@ -151,20 +190,11 @@ export const SongDetailView: React.FC<SongDetailViewProps> = ({
     }
   };
 
-  // Adjust scroll speed dynamically if already scrolling
   useEffect(() => {
     if (isScrolling) {
       launchScrollLoop();
     }
-  }, [scrollSpeed]);
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    } else {
-      if (document.exitFullscreen) document.exitFullscreen();
-    }
-  };
+  }, [scrollSpeed, isStageFullscreen]);
 
   // Capo suggestions
   const capoOptions = getCapoSuggestions(currentKey);
@@ -176,16 +206,9 @@ export const SongDetailView: React.FC<SongDetailViewProps> = ({
 
   // Render chords HTML with clickable chord spans
   const transposedRawChords = transposeFormattedCifra(song.chords, semitones, preferFlat);
-  
-  // Extract list of all active chords in current song for quick inspection
   const activeChords = extractUniqueChords(transposedRawChords);
 
-  // Prepare printable version
-  const handlePrint = () => {
-    window.print();
-  };
-
-  // Share text via WhatsApp or Web Share
+  // Share text via WhatsApp
   const handleShare = () => {
     const textToShare = `🎵 *${song.title}* - ${song.artist}\nTom: *${currentKey}* | BPM: ${song.bpm} | Compasso: ${song.timeSig}\n\n${song.notes ? `Observações: ${song.notes}\n\n` : ''}${transposedRawChords.replace(/<[^>]+>/g, '')}`;
     
@@ -200,10 +223,240 @@ export const SongDetailView: React.FC<SongDetailViewProps> = ({
     }
   };
 
+  // ==========================================
+  // FULL SCREEN STAGE PERFORMANCE VIEW (MODO PALCO)
+  // ==========================================
+  if (isStageFullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[#000000] text-slate-100 flex flex-col overflow-hidden select-none font-sans">
+        
+        {/* Fullscreen Stage HUD Header */}
+        <header className="bg-neutral-950/95 border-b border-neutral-900 px-4 py-2.5 flex items-center justify-between gap-3 shrink-0 backdrop-blur">
+          
+          {/* Left: Exit Stage & Song Title */}
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <button
+              onClick={exitStageFullscreen}
+              className="flex items-center gap-1.5 bg-neutral-800 hover:bg-neutral-700 text-slate-200 px-3 py-1.5 rounded-xl border border-neutral-700 text-xs font-bold transition shrink-0 active:scale-95"
+              title="Sair do Modo Palco (Esc)"
+            >
+              <X className="w-4 h-4 text-red-400" />
+              <span>Sair da Tela Cheia</span>
+            </button>
+
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-black text-white truncate leading-tight">
+                {song.title}
+              </h2>
+              <div className="flex items-center gap-2 text-[11px] text-amber-400 font-semibold truncate">
+                <span>{song.artist}</span>
+                {setlistSongs.length > 0 && currentIndex !== -1 && (
+                  <span className="text-neutral-400 font-mono">
+                    · {currentIndex + 1}/{setlistSongs.length} do Culto
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Center / Right: Quick Stage Tweaks */}
+          <div className="flex items-center gap-2 shrink-0">
+            
+            {/* Quick Transposer */}
+            <div className="flex items-center bg-neutral-900 border border-neutral-800 rounded-xl p-0.5">
+              <button
+                onClick={() => setSemitones(prev => prev - 1)}
+                className="w-7 h-7 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-amber-400 font-black text-sm active:scale-90 flex items-center justify-center"
+                title="Tom -1"
+              >
+                -
+              </button>
+              <div className="px-2 font-mono font-black text-amber-400 text-sm text-center min-w-[2.5rem]">
+                {currentKey}
+              </div>
+              <button
+                onClick={() => setSemitones(prev => prev + 1)}
+                className="w-7 h-7 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-amber-400 font-black text-sm active:scale-90 flex items-center justify-center"
+                title="Tom +1"
+              >
+                +
+              </button>
+            </div>
+
+            {/* Columns Toggle (Essential for iPad/Tablets) */}
+            <button
+              onClick={() => setIsTwoColumns(!isTwoColumns)}
+              className={`p-2 rounded-xl text-xs font-semibold border transition ${
+                isTwoColumns 
+                  ? 'bg-amber-500 text-slate-950 border-amber-400' 
+                  : 'bg-neutral-900 text-slate-300 border-neutral-800 hover:text-white'
+              }`}
+              title="Alternar entre 1 e 2 Colunas no Palco"
+            >
+              <Columns className="w-4 h-4" />
+            </button>
+
+            {/* Font Size Adjusters */}
+            <div className="flex items-center bg-neutral-900 border border-neutral-800 rounded-xl p-0.5">
+              <button
+                onClick={() => setFontSize(prev => Math.max(13, prev - 1))}
+                className="px-2 py-1 text-xs font-black text-slate-300 hover:text-white"
+                title="Diminuir fonte"
+              >
+                A-
+              </button>
+              <span className="text-[11px] text-slate-400 px-1 font-mono">{fontSize}</span>
+              <button
+                onClick={() => setFontSize(prev => Math.min(32, prev + 1))}
+                className="px-2 py-1 text-xs font-black text-slate-300 hover:text-white"
+                title="Aumentar fonte"
+              >
+                A+
+              </button>
+            </div>
+
+            {/* Metronome Trigger in Stage Mode */}
+            <button
+              onClick={() => onOpenMetronome(song.bpm, song.timeSig)}
+              className="flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2.5 py-1.5 rounded-xl text-xs font-bold transition"
+              title="Abrir Metrônomo"
+            >
+              <Clock className="w-3.5 h-3.5 text-amber-500" />
+              <span className="tabular-nums font-mono">{song.bpm}</span>
+            </button>
+
+          </div>
+        </header>
+
+        {/* Scrollable Stage Chart Body */}
+        <div 
+          ref={stageScrollContainerRef}
+          className="flex-1 overflow-y-auto px-4 sm:px-8 lg:px-14 py-6 scrollbar-none"
+        >
+          {/* Capo alert if applicable */}
+          {capoOptions.length > 0 && semitones !== 0 && (
+            <div className="mb-4 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 flex items-center gap-2 max-w-xl mx-auto">
+              <Info className="w-4 h-4 shrink-0 text-amber-400" />
+              <span>
+                Capotraste na casa {capoOptions[0].fret} (formato em {capoOptions[0].openKey})
+              </span>
+            </div>
+          )}
+
+          {/* Cifra Display */}
+          <div 
+            className={`font-cifra whitespace-pre-wrap leading-relaxed select-text max-w-5xl mx-auto ${
+              isTwoColumns ? 'md:columns-2 md:gap-14' : ''
+            }`}
+            style={{ fontSize: `${fontSize}px`, lineHeight: 1.85 }}
+            dangerouslySetInnerHTML={{
+              __html: formatChordsToInteractiveHtml(transposedRawChords)
+            }}
+            onClick={(e) => {
+              const target = e.target as HTMLElement;
+              if (target && target.tagName === 'C') {
+                const chordText = target.innerText.trim();
+                if (chordText) onInspectChord(chordText);
+              }
+            }}
+          />
+        </div>
+
+        {/* Stage Bottom Controller (Auto-Scroll & Setlist Page Turners) */}
+        <footer className="bg-neutral-950/95 border-t border-neutral-900 px-4 py-3 flex items-center justify-between gap-3 shrink-0 backdrop-blur">
+          
+          {/* Previous Song in Setlist */}
+          <button
+            onClick={() => prevSong && onNavigateSong && onNavigateSong(prevSong.id)}
+            disabled={!prevSong}
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl border text-xs sm:text-sm font-semibold transition ${
+              prevSong
+                ? 'bg-neutral-900 text-slate-100 hover:bg-neutral-800 border-neutral-800 active:scale-95'
+                : 'opacity-30 cursor-not-allowed bg-neutral-950 text-slate-600 border-neutral-900'
+            }`}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">Anterior:</span>
+            <span className="truncate max-w-[100px] sm:max-w-[150px] font-bold">
+              {prevSong ? prevSong.title : 'Início'}
+            </span>
+          </button>
+
+          {/* Auto-Scroll Module */}
+          <div className="flex items-center gap-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-1.5">
+            <button
+              onClick={toggleAutoScroll}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition active:scale-95 ${
+                isScrolling
+                  ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
+                  : countdown !== null
+                  ? 'bg-amber-600 text-white animate-pulse'
+                  : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md shadow-amber-500/10'
+              }`}
+            >
+              {countdown !== null ? (
+                <span>Iniciando em {countdown}...</span>
+              ) : isScrolling ? (
+                <>
+                  <Pause className="w-3.5 h-3.5 fill-current" />
+                  <span>Pausar</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Auto-Scroll</span>
+                </>
+              )}
+            </button>
+
+            {/* Speed slider */}
+            <div className="flex items-center gap-1 px-1">
+              <span className="text-[10px] text-neutral-400 font-mono hidden sm:inline">Vel:</span>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                value={scrollSpeed}
+                onChange={(e) => setScrollSpeed(Number(e.target.value))}
+                className="w-16 sm:w-24 accent-amber-500 cursor-pointer"
+                title={`Velocidade: ${scrollSpeed}`}
+              />
+              <span className="text-[10px] text-slate-300 font-mono w-3 text-right">
+                {scrollSpeed}
+              </span>
+            </div>
+          </div>
+
+          {/* Next Song in Setlist */}
+          <button
+            onClick={() => nextSong && onNavigateSong && onNavigateSong(nextSong.id)}
+            disabled={!nextSong}
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl border text-xs sm:text-sm font-semibold transition ${
+              nextSong
+                ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 border-amber-400 shadow-md font-bold active:scale-95'
+                : 'opacity-30 cursor-not-allowed bg-neutral-950 text-slate-600 border-neutral-900'
+            }`}
+          >
+            <span className="hidden sm:inline">Próxima:</span>
+            <span className="truncate max-w-[100px] sm:max-w-[150px] font-bold">
+              {nextSong ? nextSong.title : 'Fim'}
+            </span>
+            <ChevronRight className="w-4 h-4 stroke-[3]" />
+          </button>
+
+        </footer>
+
+      </div>
+    );
+  }
+
+  // ==========================================
+  // STANDARD REHEARSAL / LIBRARY VIEW
+  // ==========================================
   return (
     <div className={`min-h-screen pb-32 transition-colors duration-200 ${isStageBlackout ? 'stage-blackout bg-black' : 'bg-slate-950 text-slate-100'}`}>
       
-      {/* Top Stage Control Header */}
+      {/* Top Header Bar */}
       <div className={`sticky top-0 z-30 backdrop-blur-md border-b transition-colors ${isStageBlackout ? 'bg-black/95 border-neutral-900' : 'bg-slate-900/90 border-slate-800'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-2 sm:gap-4">
           
@@ -218,7 +471,7 @@ export const SongDetailView: React.FC<SongDetailViewProps> = ({
               <span className="hidden sm:inline">Voltar</span>
             </button>
 
-            {/* Setlist Navigation Indicators if applicable */}
+            {/* Setlist Navigation Indicators */}
             {setlistSongs.length > 0 && currentIndex !== -1 && (
               <span className="text-xs text-amber-400 font-mono bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg hidden md:inline-block">
                 Música {currentIndex + 1} de {setlistSongs.length}
@@ -226,9 +479,19 @@ export const SongDetailView: React.FC<SongDetailViewProps> = ({
             )}
           </div>
 
-          {/* Quick Stage View Modifiers */}
+          {/* Quick Stage View Modifiers & Dedicated Fullscreen Trigger */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             
+            {/* PROMINENT FULLSCREEN STAGE BUTTON */}
+            <button
+              onClick={enterStageFullscreen}
+              className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-3 sm:px-4 py-2 rounded-xl shadow-lg shadow-amber-500/20 active:scale-95 transition text-xs sm:text-sm"
+              title="Abrir no Modo Palco (Tela Cheia sem distrações para tocar no culto)"
+            >
+              <Maximize2 className="w-4 h-4 stroke-[2.5]" />
+              <span className="whitespace-nowrap">Modo Tela Cheia</span>
+            </button>
+
             {/* Stage Blackout Toggle */}
             <button
               onClick={() => setIsStageBlackout(!isStageBlackout)}
@@ -289,22 +552,12 @@ export const SongDetailView: React.FC<SongDetailViewProps> = ({
 
             {/* Print */}
             <button
-              onClick={handlePrint}
+              onClick={() => window.print()}
               className="hidden sm:inline-flex p-2 text-slate-300 hover:text-white bg-slate-800 border border-slate-700 rounded-xl transition"
               title="Imprimir Cifra"
               aria-label="Imprimir"
             >
               <Printer className="w-4 h-4" />
-            </button>
-
-            {/* Fullscreen */}
-            <button
-              onClick={toggleFullscreen}
-              className="p-2 text-slate-300 hover:text-white bg-slate-800 border border-slate-700 rounded-xl transition"
-              title={isFullscreen ? 'Sair da Tela Cheia' : 'Tela Cheia'}
-              aria-label="Tela Cheia"
-            >
-              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
 
           </div>
@@ -318,16 +571,37 @@ export const SongDetailView: React.FC<SongDetailViewProps> = ({
         <div className={`rounded-2xl p-5 sm:p-6 border mb-6 transition-colors ${isStageBlackout ? 'bg-neutral-950 border-neutral-800' : 'bg-slate-900 border-slate-800'}`}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
             <div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
-                {song.title}
-              </h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+                  {song.title}
+                </h1>
+                {song.link && (
+                  <a
+                    href={song.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-amber-400/90 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded-lg border border-amber-500/30 font-semibold transition"
+                    title="Ver página oficial no Cifra Club"
+                  >
+                    🔗 Cifra Club
+                  </a>
+                )}
+              </div>
               <p className="text-base sm:text-lg text-amber-400 font-semibold mt-0.5">
                 {song.artist}
               </p>
             </div>
 
-            {/* Action buttons (Edit, Delete) */}
+            {/* Action buttons (Edit, Delete, Enter Stage) */}
             <div className="flex items-center gap-2 self-start sm:self-auto">
+              <button
+                onClick={enterStageFullscreen}
+                className="flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-2 rounded-xl transition font-bold text-xs"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span>Tela Cheia</span>
+              </button>
+
               <button
                 onClick={() => onEdit(song.id)}
                 className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white bg-slate-800 border border-slate-700 hover:bg-slate-700 px-3 py-2 rounded-xl transition font-medium"
@@ -335,6 +609,7 @@ export const SongDetailView: React.FC<SongDetailViewProps> = ({
                 <Edit3 className="w-3.5 h-3.5" />
                 <span>Editar</span>
               </button>
+
               <button
                 onClick={() => onDelete(song.id)}
                 className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 border border-slate-800 rounded-xl transition"
@@ -380,7 +655,7 @@ export const SongDetailView: React.FC<SongDetailViewProps> = ({
             {/* Categoria */}
             {song.category && (
               <div className="text-slate-400">
-                <span>Estilo:</span> <span className="text-slate-200 font-medium">{song.category}</span>
+                <span>Momento:</span> <span className="text-slate-200 font-medium">{song.category}</span>
               </div>
             )}
           </div>
@@ -492,7 +767,7 @@ export const SongDetailView: React.FC<SongDetailViewProps> = ({
 
       </main>
 
-      {/* Floating Stage Toolbar (Transposition + Auto-scroll + Metronome) */}
+      {/* Floating Bottom Stage Toolbar */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-2 sm:p-3 shadow-2xl">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
           
@@ -588,14 +863,14 @@ export const SongDetailView: React.FC<SongDetailViewProps> = ({
             </div>
           </div>
 
-          {/* Quick Metronome Modal Trigger */}
+          {/* Stage Fullscreen Quick Action */}
           <button
-            onClick={() => onOpenMetronome(song.bpm, song.timeSig)}
-            className="flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 px-3 py-2 rounded-xl text-xs font-bold transition active:scale-95"
-            title="Abrir Metrônomo do Louvor"
+            onClick={enterStageFullscreen}
+            className="flex items-center gap-1.5 bg-amber-500 text-slate-950 px-3 py-2 rounded-xl text-xs font-black shadow-md shadow-amber-500/20 active:scale-95 transition"
+            title="Abrir Modo Palco Tela Cheia"
           >
-            <Clock className="w-4 h-4 text-amber-500" />
-            <span className="tabular-nums font-mono">{song.bpm} BPM</span>
+            <Maximize2 className="w-4 h-4 stroke-[2.5]" />
+            <span className="hidden sm:inline">Palco</span>
           </button>
 
         </div>
@@ -607,12 +882,10 @@ export const SongDetailView: React.FC<SongDetailViewProps> = ({
 
 // Helper to wrap chords in clickable styled spans
 function formatChordsToInteractiveHtml(chordsText: string): string {
-  // Replaces <c>CHORD</c> with styled clickable span
   let formatted = chordsText.replace(/<c>(.*?)<\/c>/g, (_, chord) => {
     return `<c class="text-amber-400 font-extrabold cursor-pointer hover:underline hover:text-amber-300 transition-colors px-0.5 rounded hover:bg-amber-500/10">${chord}</c>`;
   });
 
-  // Replaces <b>[Section]</b> with section header styling
   formatted = formatted.replace(/<b>\[(.*?)\]<\/b>/g, (_, section) => {
     return `<div class="font-sans font-bold text-sky-400 text-sm tracking-wide mt-5 mb-1.5 uppercase select-none flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>[${section}]</div>`;
   });

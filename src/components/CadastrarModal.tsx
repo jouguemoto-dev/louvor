@@ -10,7 +10,10 @@ import {
   Music, 
   AlertCircle,
   HelpCircle,
-  Sparkles
+  Sparkles,
+  Link,
+  Loader2,
+  CheckCircle2
 } from 'lucide-react';
 
 interface CadastrarModalProps {
@@ -47,9 +50,16 @@ export const CadastrarModal: React.FC<CadastrarModalProps> = ({
   const [category, setCategory] = useState<Category>('Adoração');
   const [chords, setChords] = useState('');
   const [notes, setNotes] = useState('');
+  const [link, setLink] = useState('');
+  const [capo, setCapo] = useState<number>(0);
   const [quickPaste, setQuickPaste] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
+
+  // Cifra Club URL importer state
+  const [cifraClubUrl, setCifraClubUrl] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
 
   useEffect(() => {
     if (songToEdit) {
@@ -61,7 +71,10 @@ export const CadastrarModal: React.FC<CadastrarModalProps> = ({
       setCategory(songToEdit.category || 'Adoração');
       setChords(songToEdit.chords);
       setNotes(songToEdit.notes || '');
+      setLink(songToEdit.link || '');
+      setCapo(songToEdit.capo || 0);
       setQuickPaste('');
+      setCifraClubUrl(songToEdit.link || '');
     } else {
       // Defaults for new song
       setTitle('');
@@ -72,11 +85,68 @@ export const CadastrarModal: React.FC<CadastrarModalProps> = ({
       setCategory('Adoração');
       setChords('');
       setNotes('');
+      setLink('');
+      setCapo(0);
       setQuickPaste('');
+      setCifraClubUrl('');
     }
+    setImportError(null);
+    setNotification(null);
   }, [songToEdit, isOpen]);
 
   if (!isOpen) return null;
+
+  // Handler to fetch and auto-populate song from Cifra Club link
+  const handleImportFromUrl = async () => {
+    if (!cifraClubUrl.trim()) {
+      setImportError('Por favor, cole um link do Cifra Club primeiro.');
+      return;
+    }
+
+    if (!cifraClubUrl.includes('cifraclub.com.br')) {
+      setImportError('O link informado deve ser do Cifra Club (ex: https://www.cifraclub.com.br/aline-barros/consagracao/)');
+      return;
+    }
+
+    setIsImporting(true);
+    setImportError(null);
+    setNotification('Buscando cifra diretamente no Cifra Club...');
+
+    try {
+      const response = await fetch('/api/import-cifraclub', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: cifraClubUrl.trim() })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Não foi possível carregar a cifra deste link.');
+      }
+
+      const songData = result.data;
+      if (songData.title) setTitle(songData.title);
+      if (songData.artist) setArtist(songData.artist);
+      if (songData.key) setKey(songData.key);
+      if (songData.bpm) setBpm(songData.bpm);
+      if (songData.timeSig) setTimeSig(songData.timeSig);
+      if (songData.category) setCategory(songData.category);
+      if (songData.chords) setChords(songData.chords);
+      if (songData.link) setLink(songData.link);
+      if (songData.capo !== undefined) setCapo(songData.capo);
+      if (songData.notes) setNotes(songData.notes);
+
+      setNotification(`✨ "${songData.title}" importada com sucesso do Cifra Club!`);
+      setShowPreview(true);
+      setTimeout(() => setNotification(null), 4000);
+    } catch (err: any) {
+      setImportError(err.message || 'Erro ao comunicar com o servidor para importar a cifra.');
+      setNotification(null);
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
   const handleAutoFormat = () => {
     if (!quickPaste.trim()) {
@@ -115,6 +185,8 @@ export const CadastrarModal: React.FC<CadastrarModalProps> = ({
         category,
         chords: finalChords,
         notes: notes.trim(),
+        link: link.trim() || cifraClubUrl.trim(),
+        capo: Number(capo) || 0,
         inSetlist: songToEdit ? songToEdit.inSetlist : false,
       },
       songToEdit ? songToEdit.id : undefined
@@ -133,10 +205,10 @@ export const CadastrarModal: React.FC<CadastrarModalProps> = ({
             </div>
             <div>
               <h2 className="font-extrabold text-lg text-white">
-                {songToEdit ? 'Editar Cifra de Louvor' : 'Cadastrar Nova Cifra'}
+                {songToEdit ? 'Editar Cifra de Louvor' : 'Cadastrar Cifra'}
               </h2>
               <p className="text-xs text-slate-400">
-                Preencha os dados ou use o assistente de colagem rápida
+                Cole o link do Cifra Club ou preencha os dados da música
               </p>
             </div>
           </div>
@@ -152,6 +224,7 @@ export const CadastrarModal: React.FC<CadastrarModalProps> = ({
         {/* Scrollable Form Body */}
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1">
           
+          {/* Notification Feedback */}
           {notification && (
             <div className="p-3 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold flex items-center gap-2 animate-fadeIn">
               <Sparkles className="w-4 h-4 shrink-0 text-amber-400" />
@@ -159,35 +232,61 @@ export const CadastrarModal: React.FC<CadastrarModalProps> = ({
             </div>
           )}
 
-          {/* Quick Paste Assistant Box */}
-          <div className="bg-slate-950 border border-amber-500/30 rounded-2xl p-4 shadow-inner">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                <Wand2 className="w-3.5 h-3.5" />
-                Assistente de Colagem (Cifra Club / Internet)
-              </span>
-              <span className="text-[10px] text-slate-400">Opcional</span>
+          {importError && (
+            <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-300 text-xs font-semibold flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+              <span>{importError}</span>
             </div>
-            <p className="text-[11px] text-slate-400 mb-2 leading-relaxed">
-              Copie a cifra diretamente da web, cole abaixo e clique no botão para envolver acordes e cabeçalhos automaticamente.
-            </p>
-            
-            <textarea
-              rows={3}
-              value={quickPaste}
-              onChange={(e) => setQuickPaste(e.target.value)}
-              placeholder="Cole aqui a cifra copiada da internet..."
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono transition"
-            />
+          )}
 
-            <button
-              type="button"
-              onClick={handleAutoFormat}
-              className="mt-2 w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5 active:scale-[0.99]"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>✨ Formatar Acordes Automaticamente</span>
-            </button>
+          {/* ======================================================== */}
+          {/* FEATURE: IMPORT DIRECTLY BY PASTING CIFRA CLUB URL */}
+          {/* ======================================================== */}
+          <div className="bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 border border-amber-500/40 rounded-2xl p-4 shadow-lg">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-extrabold text-amber-400 flex items-center gap-1.5">
+                <Link className="w-4 h-4" />
+                Cadastrar Colando o Link do Cifra Club
+              </span>
+              <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-bold">
+                Automático ⚡
+              </span>
+            </div>
+            
+            <p className="text-[11px] text-slate-300 mb-3 leading-relaxed">
+              Cole o link de qualquer música do Cifra Club abaixo e clique em <strong>Importar</strong>. O sistema preenche o título, artista, tom, andamento e a cifra formatada automaticamente!
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="url"
+                  value={cifraClubUrl}
+                  onChange={(e) => setCifraClubUrl(e.target.value)}
+                  placeholder="https://www.cifraclub.com.br/isaias-saad/bondade-de-deus/"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono transition"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleImportFromUrl}
+                disabled={isImporting}
+                className="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 text-xs font-extrabold px-4 py-2.5 rounded-xl shadow-md transition disabled:opacity-50 shrink-0"
+              >
+                {isImporting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Importando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Importar do Link</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Song Metadata Fields */}
@@ -201,7 +300,7 @@ export const CadastrarModal: React.FC<CadastrarModalProps> = ({
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ex: A Casa É Sua, Bondade de Deus"
+                placeholder="Ex: Bondade de Deus"
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition"
               />
             </div>
@@ -214,7 +313,7 @@ export const CadastrarModal: React.FC<CadastrarModalProps> = ({
                 type="text"
                 value={artist}
                 onChange={(e) => setArtist(e.target.value)}
-                placeholder="Ex: Isaías Saad, Morada, Harpa Cristã"
+                placeholder="Ex: Isaías Saad, Morada"
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition"
               />
             </div>
@@ -270,7 +369,7 @@ export const CadastrarModal: React.FC<CadastrarModalProps> = ({
 
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1">
-                Categoria
+                Momento / Categoria
               </label>
               <select
                 value={category}
@@ -284,25 +383,42 @@ export const CadastrarModal: React.FC<CadastrarModalProps> = ({
             </div>
           </div>
 
-          {/* Notes for Band */}
-          <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">
-              Observações do Arranjo para a Banda (Opcional)
-            </label>
-            <input
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ex: Introdução no teclado, segurar refrão para oração pastoral..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition"
-            />
+          {/* Notes for Band & Capo */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="sm:col-span-2">
+              <label className="text-xs font-semibold text-slate-300 block mb-1">
+                Observações do Arranjo para a Banda (Opcional)
+              </label>
+              <input
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Ex: Introdução no teclado, segurar refrão..."
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">
+                Capotraste (Casa)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="12"
+                value={capo}
+                onChange={(e) => setCapo(Number(e.target.value))}
+                placeholder="0"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition font-mono"
+              />
+            </div>
           </div>
 
           {/* Chords Text Area & Live Preview Toggle */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-semibold text-slate-300">
-                Cifra Completa (Acordes destacados com &lt;c&gt;Tom&lt;/c&gt;) *
+                Cifra Completa (Acordes em &lt;c&gt;Tom&lt;/c&gt;) *
               </label>
 
               <button

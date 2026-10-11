@@ -11,110 +11,111 @@ export const INITIAL_SONGS: Song[] = [
     category: 'Celebração',
     inSetlist: true,
     capo: 0,
-    notes: 'Repertório 1 - Letra e Cifra completa oficial (Cifra Club). Entrada enérgica com teclado e bateria. Toda a igreja canta o refrão em uníssono.',
-    tags: ['Abertura', 'Celebração', 'Louvor', 'Cifra Club Oficial', 'Completa'],
-    chords: `<b>[Intro]</b> <c>A</c>  <c>A4</c>  <c>A</c>  <c>A4</c>  <c>E/G#</c>  <c>F#m7</c>  <c>D</c>  <c>E</c>
+    notes: 'Repertório 1 - Fonte Cifra Club (Versão Simplificada). Abertura festiva e solene de consagração.',
+    link: 'https://www.cifraclub.com.br/aline-barros/consagracao/simplificada.html',
+    tags: ['Abertura', 'Celebração', 'Louvor', 'Cifra Club Simplificada'],
+    chords: `<b>[Intro]</b> <c>A</c>  <c>A4</c>  <c>A</c>  <c>A4</c>
 
 <b>[Primeira Parte]</b>
-<c>A</c>          <c>E/G#</c>
+<c>A</c>          <c>E</c>
  Ao Rei dos reis consagro
-<c>Em/G</c>   <c>D/F#</c>
+<c>G</c>    <c>D</c>
  Tudo o que sou
-<c>Dm/F</c>        <c>A/E</c>
+<c>Dm</c>         <c>A</c>
  De gratos louvores transborda
-<c>E/B</c>   <c>B7</c>   <c>E</c>
+<c>B7</c>          <c>E</c>
  O meu coração
-<c>A</c>        <c>E/G#</c>
+
+<c>A</c>        <c>E</c>
  A minha vida eu entrego
-<c>Em/G</c>        <c>D/F#</c>
+<c>G</c>        <c>D</c>
  Nas Tuas mãos, meu Senhor
-<c>Dm/F</c>           <c>A/E</c>
+<c>Dm</c>           <c>A</c>
  Pra Te exaltar com todo meu ser
-<c>E/B</c>    <c>E</c>    <c>A</c>
+<c>E</c>          <c>A</c>
  Em todo o tempo
 
-<b>[Pré-Refrão]</b>
-<c>E</c>
- Exaltado seja o Teu nome
-<c>D/F#</c>                <c>E/G#</c>
- Exaltado seja o Teu santo nome!
-
 <b>[Refrão]</b>
-<c>A</c>          <c>E/G#</c>
+<c>A</c>          <c>E</c>
  Digno és de glória e louvor
-<c>F#m7</c>       <c>D</c>
+<c>F#m</c>        <c>D</c>
  Digno és de honra e poder
-<c>A/C#</c>        <c>Bm7</c>        <c>E</c>
- Santo, santo, Pai poderoso
-<c>A</c>          <c>E/G#</c>
+<c>A</c>           <c>E</c>
+ Santo, santo, Pai poderoso!
+
+<c>A</c>          <c>E</c>
  Digno és de glória e louvor
-<c>F#m7</c>       <c>D</c>
+<c>F#m</c>        <c>D</c>
  Digno és de honra e poder
-<c>A/C#</c>        <c>E</c>            <c>A</c>   <c>E</c>
+<c>A</c>           <c>E</c>            <c>A</c>
  Santo, santo, Pai poderoso!
 
 <b>[Segunda Parte]</b>
-<c>A</c>          <c>E/G#</c>
+<c>A</c>          <c>E</c>
  Ao Rei dos reis consagro
-<c>Em/G</c>   <c>D/F#</c>
+<c>G</c>    <c>D</c>
  Tudo o que sou
-<c>Dm/F</c>        <c>A/E</c>
+<c>Dm</c>         <c>A</c>
  De gratos louvores transborda
-<c>E/B</c>   <c>B7</c>   <c>E</c>
+<c>B7</c>          <c>E</c>
  O meu coração
-<c>A</c>        <c>E/G#</c>
+
+<c>A</c>        <c>E</c>
  A minha vida eu entrego
-<c>Em/G</c>        <c>D/F#</c>
+<c>G</c>        <c>D</c>
  Nas Tuas mãos, meu Senhor
-<c>Dm/F</c>           <c>A/E</c>
+<c>Dm</c>           <c>A</c>
  Pra Te exaltar com todo meu ser
-<c>E/B</c>    <c>E</c>    <c>A</c>
+<c>E</c>          <c>A</c>
  Em todo o tempo
 
 <b>[Ponte]</b>
-<c>F#m7</c>      <c>C#m7</c>
+<c>F#m</c>      <c>C#m</c>
  Toda a terra se prostrará
-<c>D</c>         <c>A/C#</c>
+<c>D</c>         <c>A</c>
  E toda a língua confessará
-<c>Bm7</c>       <c>D/E</c>         <c>A</c>   <c>A/C#</c>
+<c>Bm</c>       <c>E</c>           <c>A</c>
  Que Tu és Senhor, que Tu és Senhor!
-<c>F#m7</c>      <c>C#m7</c>
+
+<c>F#m</c>      <c>C#m</c>
  Toda a terra se prostrará
-<c>D</c>         <c>A/C#</c>
+<c>D</c>         <c>A</c>
  E toda a língua confessará
-<c>Bm7</c>       <c>E</c>           <c>F#m7</c>  <c>E</c>  <c>D</c>
+<c>Bm</c>       <c>E</c>           <c>A</c>
  Que Tu és Senhor, que Tu és Senhor!
 
 <b>[Refrão Final]</b>
-<c>A</c>          <c>E/G#</c>
+<c>A</c>          <c>E</c>
  Digno és de glória e louvor
-<c>F#m7</c>       <c>D</c>
+<c>F#m</c>        <c>D</c>
  Digno és de honra e poder
-<c>A/C#</c>        <c>Bm7</c>        <c>E</c>
- Santo, santo, Pai poderoso
-<c>A</c>          <c>E/G#</c>
+<c>A</c>           <c>E</c>
+ Santo, santo, Pai poderoso!
+
+<c>A</c>          <c>E</c>
  Digno és de glória e louvor
-<c>F#m7</c>       <c>D</c>
+<c>F#m</c>        <c>D</c>
  Digno és de honra e poder
-<c>A/C#</c>        <c>E</c>            <c>A</c>
+<c>A</c>           <c>E</c>            <c>A</c>
  Santo, santo, Pai poderoso!
 
 <b>[Final]</b>
-<c>A/C#</c>        <c>D</c>      <c>E</c>      <c>A</c>
+<c>D</c>      <c>E</c>      <c>A</c>
  Santo, santo, Pai poderoso!`
   },
   {
     id: '2',
-    title: 'Minhas Lamparinas (Pode Morar Aqui)',
-    artist: 'Theo Rubia & Alessandro Vilas Boas',
+    title: 'Pode Morar Aqui (Minhas Lamparinas)',
+    artist: 'Theo Rubia (part. Alessandro Vilas Boas)',
     key: 'C',
     bpm: 68,
     timeSig: '4/4',
     category: 'Adoração',
     inSetlist: true,
     capo: 3,
-    notes: 'Repertório 2 - Letra e Cifra completa oficial (Cifra Club). Tom em C (original com Capo na 3ª casa em Eb). Inclui o momento profético "Tem fogo nos olhos" e "Minhas lamparinas estão acesas".',
-    tags: ['Adoração', 'Entrega', 'Intimidade', 'Cifra Club Oficial', 'Completa'],
+    notes: 'Repertório 2 - Fonte Cifra Club oficial. Tom C (forma) com Capo 3 para afinação original em Eb. Inclui estrofes de entrega e "Minhas lamparinas estão acesas".',
+    link: 'https://www.cifraclub.com.br/theo-rubia/pode-morar-aqui/',
+    tags: ['Adoração', 'Entrega', 'Intimidade', 'Cifra Club Oficial'],
     chords: `<b>[Intro]</b> <c>F</c>  <c>Am7</c>  <c>G</c>  <c>C/E</c>
         <c>F</c>  <c>Am7</c>  <c>G</c>
 
@@ -245,8 +246,9 @@ export const INITIAL_SONGS: Song[] = [
     category: 'Louvor',
     inSetlist: true,
     capo: 0,
-    notes: 'Repertório 3 - Letra e Cifra completa oficial (Cifra Club). Composição de Rita Springer adaptada por Juliano Son. O arranjo cresce do dedilhado íntimo até o clamor pleno no refrão.',
-    tags: ['Louvor', 'Fidelidade', 'Esperança', 'Cifra Club Oficial', 'Completa'],
+    notes: 'Repertório 3 - Fonte Cifra Club oficial. Letra completa de Rita Springer adaptada por Juliano Son.',
+    link: 'https://www.cifraclub.com.br/juliano-son/vai-valer-a-pena/',
+    tags: ['Louvor', 'Fidelidade', 'Esperança', 'Cifra Club Oficial'],
     chords: `<b>[Intro]</b> <c>C9</c>  <c>G/B</c>  <c>Am7</c>  <c>F</c>  <c>C/E</c>  <c>Dm</c>  <c>G</c>
 
 <b>[Primeira Parte]</b>
@@ -347,8 +349,9 @@ Vai valer a pena no fim!
     category: 'Comunhão',
     inSetlist: true,
     capo: 0,
-    notes: 'Momento de Comunhão / Santa Ceia - Letra e Cifra completa oficial (Cifra Club & FHOP Music). Composição de Ellen D\'Karla. Foco no anseio pela volta de Cristo e na comunhão da mesa.',
-    tags: ['Comunhão', 'Ceia do Senhor', 'Maranata', 'Cifra Club Oficial', 'Completa'],
+    notes: 'Momento de Comunhão / Santa Ceia - Fonte Cifra Club oficial. Composição de Ellen D\'Karla (FHOP Music). Foco na ceia e na expectativa do encontro com o Noivo.',
+    link: 'https://www.cifraclub.com.br/florianopolis-house-of-prayer/nosso-coracao-queima/',
+    tags: ['Comunhão', 'Ceia do Senhor', 'Maranata', 'Cifra Club Oficial'],
     chords: `<b>[Intro]</b> <c>C</c>  <c>C/E</c>  <c>F9</c>  <c>G</c>
         <c>Am7</c>  <c>F9</c>  <c>C</c>  <c>G</c>
 
@@ -469,117 +472,115 @@ Vai valer a pena no fim!
   },
   {
     id: '5',
-    title: 'Tudo É Teu (Tudo Que Eu Tenho É Teu)',
-    artist: 'Morada (Banda MORADA)',
-    key: 'D',
-    bpm: 125,
+    title: 'Tudo É Teu',
+    artist: 'Drops INA',
+    key: 'C',
+    bpm: 72,
     timeSig: '4/4',
     category: 'Oferta',
     inSetlist: true,
     capo: 0,
-    notes: 'Momento de Oferta e Dízimos - Letra e Cifra completa oficial (Cifra Club). Canção de consagração e gratidão, declarando que todos os nossos bens e talentos pertencem ao Senhor.',
-    tags: ['Oferta', 'Dízimo', 'Gratidão', 'Cifra Club Oficial', 'Completa'],
-    chords: `<b>[Intro]</b> <c>D</c>  <c>A</c>  <c>Bm7</c>  <c>G</c>
-        <c>D</c>  <c>A</c>  <c>Bm7</c>  <c>G</c>
+    notes: 'Momento de Oferta e Dízimos - Fonte Cifra Club oficial (Drops INA). Consagração de tudo: "Minha casa, meu dinheiro, meu destino por inteiro... Tudo é Teu!".',
+    link: 'https://www.cifraclub.com.br/drops-ina/tudo-e-teu/',
+    tags: ['Oferta', 'Dízimo', 'Gratidão', 'Drops INA', 'Cifra Club Oficial'],
+    chords: `<b>[Intro]</b> <c>C</c>  <c>G/B</c>  <c>Am7</c>  <c>F</c>
 
 <b>[Primeira Parte]</b>
-<c>D</c>
- De todo lugar, perdidos virão
-<c>A</c>
- Em uma só voz, livres vamos cantar
-<c>Bm7</c>
- Jesus, por Ti eu viverei
-<c>G</c>
- Nunca me envergonharei
+<c>C</c>
+ Não há ninguém como Jesus
+<c>G/B</c>
+ Em Sua mesa o pão e o vinho
+<c>Am7</c>
+ Dividiu com os pecadores
+<c>F</c>
+ Não há ninguém como Jesus
 
-<c>D</c>
- De todo lugar, perdidos virão
-<c>A</c>
- Em uma só voz, livres vamos cantar
-<c>Bm7</c>
- Jesus, por Ti eu viverei
-<c>G</c>
- Nunca me envergonharei
+<c>C</c>
+ Humilde servo e Rei da Glória
+<c>G/B</c>
+ Se entregou em sacrifício
+<c>Am7</c>
+ Por amor derramou Seu sangue
+<c>F</c>
+ Não há ninguém como Jesus
 
-<b>[Segunda Parte - Consagração da Oferta]</b>
-<c>D</c>
- A minha vida é a Tua vida
-<c>A</c>
- Tudo o que sou é totalmente Teu, Senhor
-<c>Bm7</c>
- O meu presente, o meu futuro eu entreguei
+<b>[Pré-Refrão]</b>
+<c>Dm7</c>
+ E ao olhar pra Tua cruz
+<c>C/E</c>
+ Eu vejo quem Tu és
+<c>F</c>
+ E não me resta mais nada
 <c>G</c>
- E o meu passado eu afoguei no mar
+ A não ser Te entregar tudo!
 
-<c>D</c>
- Meu coração, a minha oferta
-<c>A</c>
- Tudo o que tenho entrego no Teu altar
-<c>Bm7</c>
- O meu sustento vem de Ti
+<b>[Refrão - Momento da Oferta]</b>
+<c>C</c>
+ Tudo que eu tenho é Teu, Cristo!
+<c>G/B</c>
+ Tudo que eu sou é Teu, Filho!
+<c>Am7</c>
+ Minha casa, meu dinheiro
 <c>G</c>
- Toda provisão vem de Tuas mãos
+ Meu destino por inteiro
+<c>F</c>
+ Tudo é Teu, tudo é Teu!
 
-<b>[Refrão]</b>
-<c>D</c>
- Teu, Teu, tudo é Teu!
-<c>A</c>
- Teu, Teu, tudo é Teu!
-<c>Bm7</c>
- Meu ser e todo meu louvor
+<c>C</c>
+ Tudo que eu tenho é Teu, Cristo!
+<c>G/B</c>
+ Tudo que eu sou é Teu, Filho!
+<c>Am7</c>
+ Minha casa, meu dinheiro
 <c>G</c>
- Teu, Teu, tudo é Teu!
-
-<c>D</c>
- Tudo o que eu tenho é Teu!
-<c>A</c>
- Tudo o que eu tenho é Teu!
-<c>Bm7</c>
- Minha vida, meu louvor
-<c>G</c>
- Meu coração é Teu, Senhor!
+ Meu destino por inteiro
+<c>F</c>
+ Tudo é Teu, tudo é Teu!
 
 <b>[Ponte]</b>
-<c>Em7</c>            <c>D/F#</c>
- Levaste a cruz, morreste e vivo estás
-<c>G</c>                 <c>A</c>
- Meu Deus, meu tudo sempre Te darei!
-<c>Em7</c>            <c>D/F#</c>
- Não há nada que eu tenha aqui
-<c>G</c>                 <c>A</c>
- Que não pertença a Ti, Senhor!
-
-<b>[Ponte 2 - Nova Criatura]</b>
-<c>D</c>
- Sou nova criatura, sou nova criatura!
-<c>A</c>
- Sou nova criatura, sou nova criatura!
-<c>Bm7</c>
- Em uma só voz, livres vamos cantar
+<c>Am7</c>
+ Eu me esvazio de mim
 <c>G</c>
- Em uma só voz, livres vamos cantar!
+ Pra que Tu cresças em mim
+<c>F</c>
+ Eu me esvazio de mim
+<c>C/E</c>
+ Pra que Tu reines em mim!
+
+<c>Dm7</c>
+ Nada é meu, Senhor
+<c>C/E</c>
+ Tudo provém de Ti
+<c>F</c>
+ Minha vida e meus bens
+<c>G</c>
+ Consagro a Ti aqui!
 
 <b>[Refrão Final]</b>
-<c>D</c>
- Teu, Teu, tudo é Teu!
-<c>A</c>
- Teu, Teu, tudo é Teu!
-<c>Bm7</c>
- Meu ser e todo meu louvor
+<c>C</c>
+ Tudo que eu tenho é Teu, Cristo!
+<c>G/B</c>
+ Tudo que eu sou é Teu, Filho!
+<c>Am7</c>
+ Minha casa, meu dinheiro
 <c>G</c>
- Teu, Teu, tudo é Teu!
+ Meu destino por inteiro
+<c>F</c>
+ Tudo é Teu, tudo é Teu!
 
-<c>D</c>
- Tudo o que eu tenho é Teu!
-<c>A</c>
- Tudo o que eu tenho é Teu!
-<c>Bm7</c>
- Minha vida, meu louvor
+<c>C</c>
+ Tudo que eu tenho é Teu, Cristo!
+<c>G/B</c>
+ Tudo que eu sou é Teu, Filho!
+<c>Am7</c>
+ Minha casa, meu dinheiro
 <c>G</c>
- Meu coração é Teu, Senhor!
+ Meu destino por inteiro
+<c>F</c>
+ Tudo é Teu, tudo é Teu!
 
 <b>[Final]</b>
-<c>D</c>  <c>A</c>  <c>Bm7</c>  <c>G</c>  <c>D</c>`
+<c>C</c>  <c>G/B</c>  <c>Am7</c>  <c>F</c>  <c>C</c>`
   }
 ];
 
@@ -589,17 +590,17 @@ export const INITIAL_SETLISTS: Setlist[] = [
     title: 'Culto de Louvor & Adoração',
     date: new Date().toISOString().split('T')[0],
     minister: 'Equipe de Louvor',
-    notes: 'Ordem completa do culto: Repertório inicial (1, 2, 3), Momento da Comunhão e Momento do Ofertório.',
+    notes: 'Ordem completa do culto: Repertório inicial (1, 2, 3), Momento da Comunhão e Momento do Ofertório (Links Cifra Club).',
     items: [
       {
         songId: '1',
         transposition: 0,
-        transitionNote: 'Repertório 1 - Consagração (Aline Barros). Abertura vibrante com louvor ao Rei.'
+        transitionNote: 'Repertório 1 - Consagração (Aline Barros). Cifra Club simplificada.'
       },
       {
         songId: '2',
         transposition: 0,
-        transitionNote: 'Repertório 2 - Minhas Lamparinas / Pode Morar Aqui. Clamor por intimidade ("Tem fogo nos olhos").'
+        transitionNote: 'Repertório 2 - Pode Morar Aqui / Minhas Lamparinas (Theo Rubia). Adoração e clamor.'
       },
       {
         songId: '3',
@@ -609,12 +610,12 @@ export const INITIAL_SETLISTS: Setlist[] = [
       {
         songId: '4',
         transposition: 0,
-        transitionNote: 'Comunhão - Nosso Coração Queima (fhop music). Santa Ceia e expectativa da volta de Jesus.'
+        transitionNote: 'Comunhão - Nosso Coração Queima (fhop music). Celebração da Ceia do Senhor.'
       },
       {
         songId: '5',
         transposition: 0,
-        transitionNote: 'Oferta - Tudo Que Eu Tenho É Teu (Morada). Gratidão, generosidade e entrega dos frutos ao Senhor.'
+        transitionNote: 'Oferta - Tudo É Teu (Drops INA). Consagração de dízimos e ofertas.'
       }
     ]
   }

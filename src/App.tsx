@@ -16,7 +16,7 @@ import { MetronomeModal } from './components/MetronomeModal';
 import { ChordDiagramModal } from './components/ChordDiagramModal';
 import { Download, Upload, RotateCcw, Sparkles } from 'lucide-react';
 
-const STORAGE_KEY = 'louvor_songs_v4';
+const STORAGE_KEY = 'louvor_songs_v5';
 
 export default function App() {
   // Load initial songs from localStorage or fallback to curated worship anthems
@@ -258,6 +258,7 @@ export default function App() {
             onDeleteSong={handleDeleteSong}
             onToggleSetlist={handleToggleSetlist}
             onOpenNewSong={handleOpenNewSong}
+            onSaveImportedSong={(songData) => handleSaveSong(songData)}
           />
         )}
 
