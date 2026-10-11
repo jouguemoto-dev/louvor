@@ -1,0 +1,6 @@
+{
+  "name": "LouvorApp - Ministério de Louvor",
+  "description": "Sistema web responsivo para ministério de louvor com repertório de cifras, transposição em tempo real, auto-scroll de palco, metrônomo interativo e gestão de setlists de culto.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
